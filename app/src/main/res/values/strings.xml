@@ -10,5 +10,25 @@
     <string name="menu_measure">Measure</string>
     <string name="menu_history">History</string>
     <string name="menu_slideshow">Slideshow</string>
+
+    <!-- Home fragment string resources -->
     <string name="connect_btn">Find device</string>
+    <string name="find_device">Find device</string>
+    <string name="bluetooth_permission_granted">Bluetooth permission granted</string>
+    <string name="bluetooth_permission_denied">Bluetooth permission denied</string>
+    <string name="connect">Connect</string>
+    <string name="measure_again">Measure again</string>
+    <string name="bluetooth_not_supported">Bluetooth not supported</string>
+    <string name="data_toast">Data toast</string>
+    <string name="data_write">Data write</string>
+    <string name="no_message">No message to display</string>
+    <string name="device_found">Device %1$s with address %2$s has been found at %3$s, on %4$s</string>
+    <string name="connecting">Connecting, wait a moment</string>
+    <string name="connection_failed">Connection failed, please ensure that the physical device is on and try again.</string>
+    <string name="connection_successful">Bluetooth successfully connected, you can start measuring.</string>
+    <string name="store_button">Store</string>
+    <string name="received_double">Grip strength: %.2fkg</string>
+    <string name="maximum_grip">Your maximum grip strength is: %.2fkg</string>
+    <string name="invalid_double">Received data is not a valid double</string>
+
 </resources>

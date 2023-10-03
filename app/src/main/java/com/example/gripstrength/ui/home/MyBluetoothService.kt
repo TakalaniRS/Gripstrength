@@ -24,6 +24,8 @@ class MyBluetoothService(
 ) {
     private val mmBuffer: ByteArray = ByteArray(1024) // mmBuffer store for the stream
     private var isDone = false
+    private val durationMillis = 10000
+    private var startTimeMillis = System.currentTimeMillis()
     private inner class ConnectedThread : Thread() {
 
         override fun run() {
@@ -45,11 +47,11 @@ class MyBluetoothService(
             }
 
             // Keep listening to the InputStream until an exception occurs.
-            val startTimeMillis = System.currentTimeMillis()
-            val durationMillis = 10000 // Set the desired duration in milliseconds (e.g., 5000 ms or 5 seconds)
+            startTimeMillis = System.currentTimeMillis()
+            //val durationMillis = 10000 // Set the desired duration in milliseconds (e.g., 5000 ms or 5 seconds)
             //while (System.currentTimeMillis() - startTimeMillis < durationMillis) {
 
-            while (true) {
+            while (System.currentTimeMillis() - startTimeMillis < durationMillis) {
                 // Read from the InputStream.
                 numBytes = try {
                     Log.d(TAG, "numBytes")
