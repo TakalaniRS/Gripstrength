@@ -25,10 +25,15 @@
     <string name="device_found">Device %1$s with address %2$s has been found at %3$s, on %4$s</string>
     <string name="connecting">Connecting, wait a moment</string>
     <string name="connection_failed">Connection failed, please ensure that the physical device is on and try again.</string>
-    <string name="connection_successful">Bluetooth successfully connected, you can start measuring.</string>
+    <string name="connection_successful">Bluetooth successfully connected. \n
+        When you are ready, press the "start measuring" button and start squeezing as hard as you can.</string>
+    <string name="start_measuring">Start measuring</string>
     <string name="store_button">Store</string>
-    <string name="received_double">Grip strength: %.2fkg</string>
-    <string name="maximum_grip">Your maximum grip strength is: %.2fkg</string>
+    <string name="received_double">Squeeze now! Apply your maximum force \n
+        \n Grip strength: %.2fkg</string>
+    <string name="maximum_grip"> Measurements complete, well done! \n
+        Your maximum grip strength is: %.2fkg</string>
     <string name="invalid_double">Received data is not a valid double</string>
+    <string name="measure_again_text">Preparing to measure again…</string>
 
 </resources>

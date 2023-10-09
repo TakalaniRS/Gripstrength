@@ -67,33 +67,39 @@ class HomeFragment : Fragment() {
         when (msg.what) {
             MESSAGE_READ -> {
                 val numBytes = msg.arg1
-                val message = String(msg.obj as ByteArray, 0, numBytes)
+                var message = String(msg.obj as ByteArray, 0, numBytes)
+                var temp = System.currentTimeMillis()
 
-                try {
-                    // Convert the string to a double
-                    val receivedDouble = message.toDouble()
-                    // Handle the received double as needed
-                    binding.textHome.text = getString(R.string.received_double, receivedDouble)
-                    if(receivedDouble > maxGrip)
-                    {
-                        maxGrip = receivedDouble
+                while(message.contains("\n")){
+                    val newLineIndex = message.indexOf("\n")
+                    val valueStr = message.substring(0, newLineIndex).trim()
+                    message = message.substring(newLineIndex+1)
+
+                    try {
+                        // Convert the string to a double
+                        val receivedDouble = valueStr.toDouble()
+                        // Handle the received double as needed
+                        binding.textHome.text = getString(R.string.received_double, receivedDouble)
+
+                        if(receivedDouble > maxGrip)
+                        {
+                            maxGrip = receivedDouble
+                        }
+
+                        if(myBluetoothService.isDoneReading()){
+                            binding.textHome.text = getString(R.string.maximum_grip, maxGrip)
+                            binding.connectButton.visibility = View.VISIBLE
+                            binding.storeButton.visibility = View.VISIBLE
+                        }
+
+                    } catch (e: NumberFormatException) {
+                        // Handle the case where the string cannot be parsed as a double
+                        binding.textHome.text = getString(R.string.invalid_double)
                     }
 
-                    if(myBluetoothService.isDoneReading()){
-                        binding.textHome.text = getString(R.string.maximum_grip, maxGrip)
-                        binding.connectButton.visibility = View.VISIBLE
-                        binding.storeButton.visibility = View.VISIBLE
-                        connectToDevice.disconnect()
-                    }
-
-                } catch (e: NumberFormatException) {
-                    // Handle the case where the string cannot be parsed as a double
-                    binding.textHome.text = getString(R.string.invalid_double)
+                    // Update the TextView with the received message
+                    //binding.textHome.text = message
                 }
-
-                // Update the TextView with the received message
-                //binding.textHome.text = message
-
             }
             MESSAGE_TOAST ->{
                 binding.textHome.text = getString(R.string.data_toast)
@@ -156,7 +162,8 @@ class HomeFragment : Fragment() {
                 readyToMeasure -> buttonPressedMeasure()
                 measuring -> {
                     maxGrip = 0.0
-                    buttonPressedConnect()
+                    myBluetoothService.stopReadingData()
+                    //buttonPressedConnect()
                     buttonPressedMeasure()
                 }
                 else -> binding.connectButton.text = " "
@@ -173,7 +180,6 @@ class HomeFragment : Fragment() {
 
     private fun buttonPressedConnect()
     {
-        binding.textHome.text = getString(R.string.connecting)
         connectToDevice.connect()
         val startTime = System.currentTimeMillis()
         val duration = 5000
@@ -183,7 +189,7 @@ class HomeFragment : Fragment() {
 
         if(connectSuccessful){
             binding.textHome.text = getString(R.string.connection_successful)
-            binding.connectButton.text = getString(R.string.menu_measure)
+            binding.connectButton.text = getString(R.string.start_measuring)
             stateOfBluetooth = readyToMeasure
         }
         else{
@@ -205,6 +211,7 @@ class HomeFragment : Fragment() {
             binding.connectButton.text = getString(R.string.measure_again)
             stateOfBluetooth = measuring
             binding.connectButton.visibility = View.INVISIBLE
+            binding.storeButton.visibility = View.INVISIBLE
             myBluetoothService.startReadingData()
             //myBluetoothService.stopReadingData()
         }

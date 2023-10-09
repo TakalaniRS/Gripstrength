@@ -26,6 +26,7 @@ class MyBluetoothService(
     private var isDone = false
     private val durationMillis = 10000
     private var startTimeMillis = System.currentTimeMillis()
+    private var continueReading = true
     private inner class ConnectedThread : Thread() {
 
         override fun run() {
@@ -50,26 +51,30 @@ class MyBluetoothService(
             startTimeMillis = System.currentTimeMillis()
             //val durationMillis = 10000 // Set the desired duration in milliseconds (e.g., 5000 ms or 5 seconds)
             //while (System.currentTimeMillis() - startTimeMillis < durationMillis) {
-
-            while (System.currentTimeMillis() - startTimeMillis < durationMillis) {
+            var previous = System.currentTimeMillis()
+            while ((continueReading) && (System.currentTimeMillis() - startTimeMillis < durationMillis)) {
                 // Read from the InputStream.
+                val temp = System.currentTimeMillis()
                 numBytes = try {
-                    Log.d(TAG, "numBytes")
+                    //Log.d(TAG, "numBytes")
                     mmInStream.read(mmBuffer)
                 } catch (e: IOException) {
                     Log.d(TAG, "Input stream was disconnected", e)
                     break
                 }
-
-                // Ensure that numBytes and mmBuffer are correct before sending the message
-                Log.d(TAG, "numBytes: $numBytes")
-                Log.d(TAG, "mmBuffer: ${String(mmBuffer, 0, numBytes)}")
-
+                Log.d(TAG, "first period: ${System.currentTimeMillis()-temp}")
                 val readMsg = handler.obtainMessage(
                     MESSAGE_READ, numBytes, -1,
                     mmBuffer
                 )
                 readMsg.sendToTarget()
+
+                // Ensure that numBytes and mmBuffer are correct before sending the message
+                Log.d(TAG, "numBytes: $numBytes")
+                val period = System.currentTimeMillis() - previous
+                previous = System.currentTimeMillis()
+                Log.d(TAG, "period: $period")
+                Log.d(TAG, "mmBuffer: ${String(mmBuffer, 0, numBytes)}")
             }
             if(System.currentTimeMillis() - startTimeMillis > durationMillis){isDone = true}
         }
@@ -110,16 +115,19 @@ class MyBluetoothService(
         writtenMsg.sendToTarget()
     }
     // Create an instance of ConnectedThread and start it
-    private val connectedThread: ConnectedThread = ConnectedThread()
+    //private val connectedThread: ConnectedThread = ConnectedThread()
 
     // Start reading data when needed
     fun startReadingData() {
+        val connectedThread = ConnectedThread()
+        continueReading = true
+        isDone = false
         connectedThread.start()
     }
 
     // Stop reading data when needed
     fun stopReadingData() {
-        connectedThread.interrupt()
+        continueReading = false
     }
 
     fun isDoneReading(): Boolean{
