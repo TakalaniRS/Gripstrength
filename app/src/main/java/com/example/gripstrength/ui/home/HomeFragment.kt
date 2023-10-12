@@ -25,6 +25,9 @@ import androidx.fragment.app.Fragment
 import androidx.lifecycle.ViewModelProvider
 import com.example.gripstrength.R
 import com.example.gripstrength.databinding.FragmentHomeBinding
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
 import java.io.IOException
 import java.io.InputStream
 import java.io.OutputStream
@@ -158,8 +161,31 @@ class HomeFragment : Fragment() {
             pairedDeviceList()
             when(stateOfBluetooth){
                 findBluetoothModule -> buttonPressedFind()
-                readyToConnect -> buttonPressedConnect()
+                readyToConnect -> {
+                    binding.textHome.text = getString(R.string.connecting)
+                    CoroutineScope(Dispatchers.Main).launch {
+                        buttonPressedConnect()
+                    }
+                }
                 readyToMeasure -> buttonPressedMeasure()
+                /*readyToMeasure ->{
+                    CoroutineScope(Dispatchers.Main).launch {
+                        for (i in 1..3) {
+                            buttonPressedMeasure()
+                            while(!myBluetoothService.isDoneReading){
+                                delay(1)
+                            }
+
+                            if(i<3){
+                                delay(1)
+                                binding.textHome.text =getString(R.string.next_attempt, maxGrip)
+                                binding.connectButton.visibility = View.INVISIBLE
+                                binding.connectButton.visibility = View.INVISIBLE
+                                delay(5000)
+                            }
+                        }
+                    }
+                }*/
                 measuring -> {
                     maxGrip = 0.0
                     myBluetoothService.stopReadingData()

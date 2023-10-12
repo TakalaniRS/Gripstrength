@@ -23,7 +23,7 @@
     <string name="data_write">Data write</string>
     <string name="no_message">No message to display</string>
     <string name="device_found">Device %1$s with address %2$s has been found at %3$s, on %4$s</string>
-    <string name="connecting">Connecting, wait a moment</string>
+    <string name="connecting">Connecting, wait a moment…</string>
     <string name="connection_failed">Connection failed, please ensure that the physical device is on and try again.</string>
     <string name="connection_successful">Bluetooth successfully connected. \n
         When you are ready, press the "start measuring" button and start squeezing as hard as you can.</string>
@@ -35,5 +35,6 @@
         Your maximum grip strength is: %.2fkg</string>
     <string name="invalid_double">Received data is not a valid double</string>
     <string name="measure_again_text">Preparing to measure again…</string>
+    <string name="next_attempt">You maximum grip strength for this attempt is %.2fkg, prepare to measure again</string>
 
 </resources>
