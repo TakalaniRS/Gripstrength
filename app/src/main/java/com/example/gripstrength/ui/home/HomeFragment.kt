@@ -19,14 +19,19 @@ import android.view.View
 import android.view.ViewGroup
 import android.widget.TextView
 import android.widget.Toast
+import androidx.appcompat.app.AppCompatActivity
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.ViewModelProvider
+import androidx.navigation.fragment.findNavController
 import com.example.gripstrength.R
 import com.example.gripstrength.databinding.FragmentHomeBinding
+import com.google.gson.Gson
+import com.google.gson.reflect.TypeToken
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import java.io.IOException
 import java.io.InputStream
@@ -36,7 +41,8 @@ import java.util.UUID
 
 class HomeFragment : Fragment() {
 
-    private var _binding: FragmentHomeBinding? = null
+    //private var _binding: FragmentHomeBinding? = null
+    lateinit var binding: FragmentHomeBinding
 
     //Get the bluetooth adapter
     private val REQUEST_ENABLE_BT = 1
@@ -61,6 +67,13 @@ class HomeFragment : Fragment() {
 
     //variable for determining maximum grip
     private var maxGrip = 0.0
+
+    //Recorded time and date variables
+    private var recordTime = ""
+    private var recordDate = ""
+
+    //Shared preferences for array storage
+    private lateinit var sharedPreferencesHelper: SharedPreferencesHelper
 
     //Date and time
     val myCalendar = Calendar.getInstance()
@@ -121,7 +134,7 @@ class HomeFragment : Fragment() {
 
     // This property is only valid between onCreateView and
     // onDestroyView.
-    private val binding get() = _binding!!
+    //private val binding get() = _binding!!
 
     override fun onCreateView(
         inflater: LayoutInflater,
@@ -131,8 +144,15 @@ class HomeFragment : Fragment() {
         val homeViewModel =
             ViewModelProvider(this).get(HomeViewModel::class.java)
 
-        _binding = FragmentHomeBinding.inflate(inflater, container, false)
+        binding = FragmentHomeBinding.inflate(inflater, container, false)
         val root: View = binding.root
+
+        //for array list
+        sharedPreferencesHelper = SharedPreferencesHelper(requireContext())
+
+        //for load array function - when starting the app for the first time
+        val dataArray = sharedPreferencesHelper.getArrayList("data")
+        setupArray(dataArray)
 
         //Checking if bluetooth is supported on this device
         val bluetoothManager = context?.getSystemService(Context.BLUETOOTH_SERVICE) as BluetoothManager
@@ -167,12 +187,12 @@ class HomeFragment : Fragment() {
                         buttonPressedConnect()
                     }
                 }
-                readyToMeasure -> buttonPressedMeasure()
-                /*readyToMeasure ->{
+                //readyToMeasure -> buttonPressedMeasure()
+                readyToMeasure ->{
                     CoroutineScope(Dispatchers.Main).launch {
                         for (i in 1..3) {
                             buttonPressedMeasure()
-                            while(!myBluetoothService.isDoneReading){
+                            while(!myBluetoothService.isDoneReading()){
                                 delay(1)
                             }
 
@@ -185,7 +205,7 @@ class HomeFragment : Fragment() {
                             }
                         }
                     }
-                }*/
+                }
                 measuring -> {
                     maxGrip = 0.0
                     myBluetoothService.stopReadingData()
@@ -198,7 +218,20 @@ class HomeFragment : Fragment() {
 
         //Store data
         binding.storeButton.setOnClickListener{
-            binding.textHome.text = ""
+            //update measurement array
+            updateArray(dataArray,maxGrip.toString(),recordDate,recordTime)
+            //archive array
+            sharedPreferencesHelper.saveArrayList(dataArray, "data")
+
+            val action = HomeFragmentDirections.actionNavMeasureToNavHistory(dataArray.toTypedArray())
+            findNavController().navigate(action)
+        }
+
+        //to access history/gallery fragment
+        binding.historyButton.setOnClickListener {
+            val data = sharedPreferencesHelper.getArrayList("data")
+            val action = HomeFragmentDirections.actionNavMeasureToNavHistory(data.toTypedArray())
+            findNavController().navigate(action)
         }
 
         return root
@@ -295,7 +328,7 @@ class HomeFragment : Fragment() {
 
     override fun onDestroyView() {
         super.onDestroyView()
-        _binding = null
+        //_binding = null
     }
 
     private fun getDate(): String{
@@ -422,5 +455,48 @@ class HomeFragment : Fragment() {
         }
     }
 
+    //------------------- Kimberleigh's Classes and Functions -------------------------------------
+    class SharedPreferencesHelper(private val context: Context) {
+        private val sharedPreferences =
+            context.getSharedPreferences("saveData", AppCompatActivity.MODE_PRIVATE)
+        private val gson = Gson()
+
+        fun saveArrayList(list: ArrayList<String>, key: String) {
+            val json = gson.toJson(list)
+            sharedPreferences.edit().putString(key, json).apply()
+        }
+
+        fun getArrayList(key: String): ArrayList<String> {
+            val json = sharedPreferences.getString(key, null)
+            val type = object : TypeToken<ArrayList<String>>() {}.type
+            return gson.fromJson(json, type) ?: ArrayList()
+        }
+
+    }
+
+    //setup array function - for when the app starts up for the first time use dummy measurements
+    fun setupArray(dataArray: ArrayList<String>){
+        if(dataArray.size!=10){
+            val dummy = "Max grip strength:  0kg \n\nDate:  00-00-00 \n\nTime:  00:00:00"
+            val dummyList: List<String> = listOf(dummy,dummy,dummy,dummy,dummy,dummy,dummy,dummy,dummy,dummy)
+            dataArray.clear()
+            dataArray.addAll(dummyList)
+            Log.d("MainActivity", "DATA ARRAY: $dataArray")
+        }else{
+            Log.d("MainActivity", "Existing DATA ARRAY: $dataArray")
+        }
+    }
+
+    //update array function - for when a new measurement has been made
+    fun updateArray(dataArray: ArrayList<String>,force: String,date: String,time: String){
+        //concatenate all variables into 1 string measurement
+        val measurement = "Max grip strength:  ${force}kg \n\nDate:  $date \n\nTime:  $time"
+
+        //update measurement array List
+        for(ind in 8 downTo 0){
+            dataArray[ind+1] = dataArray[ind]
+        }
+        dataArray[0] = measurement
+    }
 
 }

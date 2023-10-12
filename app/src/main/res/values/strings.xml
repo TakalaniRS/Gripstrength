@@ -36,5 +36,6 @@
     <string name="invalid_double">Received data is not a valid double</string>
     <string name="measure_again_text">Preparing to measure again…</string>
     <string name="next_attempt">You maximum grip strength for this attempt is %.2fkg, prepare to measure again</string>
+    <string name="history">History</string>
 
 </resources>

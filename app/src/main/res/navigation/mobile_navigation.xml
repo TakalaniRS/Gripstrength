@@ -9,13 +9,21 @@
         android:id="@+id/nav_measure"
         android:name="com.example.gripstrength.ui.home.HomeFragment"
         android:label="@string/menu_measure"
-        tools:layout="@layout/fragment_home" />
+        tools:layout="@layout/fragment_home" >
+        <action
+            android:id="@+id/action_nav_measure_to_nav_history"
+            app:destination="@id/nav_history" />
+    </fragment>
 
     <fragment
         android:id="@+id/nav_history"
         android:name="com.example.gripstrength.ui.gallery.GalleryFragment"
         android:label="@string/menu_history"
-        tools:layout="@layout/fragment_gallery" />
+        tools:layout="@layout/fragment_gallery" >
+        <argument
+            android:name="dataArray"
+            app:argType="string[]" />
+    </fragment>
 
     <fragment
         android:id="@+id/nav_slideshow"
