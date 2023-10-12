@@ -30,12 +30,12 @@
     <string name="start_measuring">Start measuring</string>
     <string name="store_button">Store</string>
     <string name="received_double">Squeeze now! Apply your maximum force \n
-        \n Grip strength: %.2fkg</string>
+        \n Grip strength: %.1fkg</string>
     <string name="maximum_grip"> Measurements complete, well done! \n
-        Your maximum grip strength is: %.2fkg</string>
+        Your average maximum grip strength is: %.1fkg</string>
     <string name="invalid_double">Received data is not a valid double</string>
     <string name="measure_again_text">Preparing to measure again…</string>
-    <string name="next_attempt">You maximum grip strength for this attempt is %.2fkg, prepare to measure again</string>
+    <string name="next_attempt">Your maximum grip strength for this attempt is %.1fkg, prepare to measure again</string>
     <string name="history">History</string>
 
 </resources>

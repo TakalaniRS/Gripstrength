@@ -67,6 +67,8 @@ class HomeFragment : Fragment() {
 
     //variable for determining maximum grip
     private var maxGrip = 0.0
+    private var total = 0.0
+    private var measurementIndex = 0
 
     //Recorded time and date variables
     private var recordTime = ""
@@ -103,6 +105,11 @@ class HomeFragment : Fragment() {
                         }
 
                         if(myBluetoothService.isDoneReading()){
+                            total+=maxGrip
+                            if(measurementIndex == 3){
+                                maxGrip = total/3
+                                measurementIndex = 0
+                            }
                             binding.textHome.text = getString(R.string.maximum_grip, maxGrip)
                             binding.connectButton.visibility = View.VISIBLE
                             binding.storeButton.visibility = View.VISIBLE
@@ -189,8 +196,11 @@ class HomeFragment : Fragment() {
                 }
                 //readyToMeasure -> buttonPressedMeasure()
                 readyToMeasure ->{
+                    total = 0.0
+                    maxGrip = 0.0
                     CoroutineScope(Dispatchers.Main).launch {
                         for (i in 1..3) {
+                            measurementIndex++
                             buttonPressedMeasure()
                             while(!myBluetoothService.isDoneReading()){
                                 delay(1)
@@ -201,7 +211,8 @@ class HomeFragment : Fragment() {
                                 binding.textHome.text =getString(R.string.next_attempt, maxGrip)
                                 binding.connectButton.visibility = View.INVISIBLE
                                 binding.connectButton.visibility = View.INVISIBLE
-                                delay(5000)
+                                delay(30000)
+                                maxGrip = 0.0
                             }
                         }
                     }
