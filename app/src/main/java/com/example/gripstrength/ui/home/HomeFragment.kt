@@ -271,6 +271,8 @@ class HomeFragment : Fragment() {
             stateOfBluetooth = measuring
             binding.connectButton.visibility = View.INVISIBLE
             binding.storeButton.visibility = View.INVISIBLE
+            recordTime = getTime()
+            recordDate = getDate()
             myBluetoothService.startReadingData()
             //myBluetoothService.stopReadingData()
         }
