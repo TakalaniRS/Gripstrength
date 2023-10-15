@@ -10,6 +10,7 @@ import android.content.ContentValues.TAG
 import android.content.Context
 import android.content.Intent
 import android.content.pm.PackageManager
+import android.os.Build.VERSION_CODES.R
 import android.os.Bundle
 import android.os.Handler
 import android.os.Looper
@@ -36,6 +37,8 @@ import kotlinx.coroutines.launch
 import java.io.IOException
 import java.io.InputStream
 import java.io.OutputStream
+import java.math.RoundingMode
+import java.text.DecimalFormat
 import java.util.Calendar
 import java.util.UUID
 
@@ -107,7 +110,11 @@ class HomeFragment : Fragment() {
                         if(myBluetoothService.isDoneReading()){
                             total+=maxGrip
                             if(measurementIndex == 3){
-                                maxGrip = total/3
+                                var aveValue = total/3
+                                val df = DecimalFormat("#.#")
+                                df.roundingMode = RoundingMode.CEILING
+                                var realValue = df.format(aveValue)
+                                maxGrip = realValue.toDouble()
                                 measurementIndex = 0
                             }
                             binding.textHome.text = getString(R.string.maximum_grip, maxGrip)
@@ -220,8 +227,25 @@ class HomeFragment : Fragment() {
                 measuring -> {
                     maxGrip = 0.0
                     myBluetoothService.stopReadingData()
-                    //buttonPressedConnect()
-                    buttonPressedMeasure()
+                    total = 0.0
+                    CoroutineScope(Dispatchers.Main).launch {
+                        for (i in 1..3) {
+                            measurementIndex++
+                            buttonPressedMeasure()
+                            while(!myBluetoothService.isDoneReading()){
+                                delay(1)
+                            }
+
+                            if(i<3){
+                                delay(1)
+                                binding.textHome.text =getString(R.string.next_attempt, maxGrip)
+                                binding.connectButton.visibility = View.INVISIBLE
+                                binding.connectButton.visibility = View.INVISIBLE
+                                delay(30000)
+                                maxGrip = 0.0
+                            }
+                        }
+                    }
                 }
                 else -> binding.connectButton.text = " "
             }
@@ -355,7 +379,7 @@ class HomeFragment : Fragment() {
         val myHour = myCalendar.get(Calendar.HOUR_OF_DAY)
         val myMinute = myCalendar.get(Calendar.MINUTE)
         val mySecond = myCalendar.get(Calendar.SECOND)
-        return "$myHour:$myMinute:$mySecond"
+        return "$myHour:$myMinute"
     }
 
     private fun pairedDeviceList() {
@@ -490,7 +514,7 @@ class HomeFragment : Fragment() {
     //setup array function - for when the app starts up for the first time use dummy measurements
     fun setupArray(dataArray: ArrayList<String>){
         if(dataArray.size!=10){
-            val dummy = "Max grip strength:  0kg \n\nDate:  00-00-00 \n\nTime:  00:00:00"
+            val dummy = "Max grip strength:  0kg \n\nDate:  00-00-00 \n\nTime:  00:00"
             val dummyList: List<String> = listOf(dummy,dummy,dummy,dummy,dummy,dummy,dummy,dummy,dummy,dummy)
             dataArray.clear()
             dataArray.addAll(dummyList)
