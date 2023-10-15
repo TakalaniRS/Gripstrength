@@ -10,6 +10,7 @@ import android.content.ContentValues.TAG
 import android.content.Context
 import android.content.Intent
 import android.content.pm.PackageManager
+import android.graphics.Color
 import android.os.Bundle
 import android.os.Handler
 import android.os.Looper
@@ -29,6 +30,9 @@ import com.example.gripstrength.R
 import com.example.gripstrength.databinding.FragmentHomeBinding
 import com.google.gson.Gson
 import com.google.gson.reflect.TypeToken
+import com.jjoe64.graphview.GraphView
+import com.jjoe64.graphview.series.DataPoint
+import com.jjoe64.graphview.series.LineGraphSeries
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
@@ -56,6 +60,7 @@ class HomeFragment : Fragment() {
     private var isBluetoothOn = true
     private var connectToDevice = ConnectToDevice()
     private lateinit var myBluetoothService: MyBluetoothService
+    private var myDeviceName = "LAPTOP-NM58S2CS"
 
     //Defining states of the app
     private val findBluetoothModule = "find"
@@ -69,6 +74,14 @@ class HomeFragment : Fragment() {
     private var maxGrip = 0.0
     private var total = 0.0
     private var measurementIndex = 0
+
+    //declaring graph parameters
+    private lateinit var graphView: GraphView
+    private lateinit var series1: LineGraphSeries<DataPoint>
+    private lateinit var series2: LineGraphSeries<DataPoint>
+    private lateinit var series3: LineGraphSeries<DataPoint>
+    private var index = 0
+
 
     //Recorded time and date variables
     private var recordTime = ""
@@ -104,19 +117,44 @@ class HomeFragment : Fragment() {
                             maxGrip = receivedDouble
                         }
 
+                        when(measurementIndex){
+                            1 ->{
+                                series1.appendData(DataPoint(index.toDouble(),receivedDouble), false, 120)
+                                graphView.onDataChanged(false, false)
+                            }
+                            2 ->{
+                                series2.appendData(DataPoint(index.toDouble(),receivedDouble), false, 120)
+                                graphView.onDataChanged(false, false)
+                                //Log.d(TAG, "index: $index and value: $receivedDouble")
+                            }
+                            3 -> {
+                                series3.appendData(DataPoint(index.toDouble(),receivedDouble), false, 120)
+                                graphView.onDataChanged(false, false)
+                                Log.d(TAG, "index: $index and value: $receivedDouble")
+                            }
+                        }
+
+                        index++
+
                         if(myBluetoothService.isDoneReading()){
                             total+=maxGrip
                             if(measurementIndex == 3){
                                 maxGrip = total/3
                                 measurementIndex = 0
+                                graphView.addSeries(series1)
+                                graphView.addSeries(series2)
+                                graphView.onDataChanged(false,false)
+                                //graphView.visibility = View.VISIBLE
                             }
                             binding.textHome.text = getString(R.string.maximum_grip, maxGrip)
+                            //binding.textHome.text = ""
                             binding.connectButton.visibility = View.VISIBLE
                             binding.storeButton.visibility = View.VISIBLE
                         }
 
                     } catch (e: NumberFormatException) {
                         // Handle the case where the string cannot be parsed as a double
+                        Log.d(TAG, "data receive not a valid double")
                         binding.textHome.text = getString(R.string.invalid_double)
                     }
 
@@ -161,6 +199,35 @@ class HomeFragment : Fragment() {
         val dataArray = sharedPreferencesHelper.getArrayList("data")
         setupArray(dataArray)
 
+        //initialize the graph parameters
+        graphView = binding.graphView
+        series1 = LineGraphSeries()
+        series2 = LineGraphSeries()
+        series3 = LineGraphSeries()
+
+        // Set properties for the series (if needed)
+        series1.title = "Data Series"
+        graphView.title = "Grip strength"
+        graphView.viewport.isScrollable = true
+
+        //x axis viewport settings
+        graphView.viewport.isXAxisBoundsManual = true
+        graphView.viewport.setMinX(0.0)
+        graphView.viewport.setMaxX(100.0) // Assuming 30 data points
+        //y axis viewport settings
+        graphView.viewport.isYAxisBoundsManual = true
+        graphView.viewport.setMinY(0.0)
+        graphView.viewport.setMaxY(100.0)
+        series1.color = Color.WHITE
+        series2.color = Color.WHITE
+        series3.color = Color.WHITE
+        graphView.gridLabelRenderer.gridColor = Color.WHITE
+        graphView.gridLabelRenderer.horizontalAxisTitleColor = Color.WHITE
+        graphView.gridLabelRenderer.verticalAxisTitleColor = Color.WHITE
+
+
+        graphView.addSeries(series1)
+
         //Checking if bluetooth is supported on this device
         val bluetoothManager = context?.getSystemService(Context.BLUETOOTH_SERVICE) as BluetoothManager
         val bluetoothAdapter: BluetoothAdapter? = bluetoothManager.adapter
@@ -201,6 +268,20 @@ class HomeFragment : Fragment() {
                     CoroutineScope(Dispatchers.Main).launch {
                         for (i in 1..3) {
                             measurementIndex++
+                            when(i){
+                                1 -> {
+                                    graphView.removeAllSeries()
+                                    graphView.addSeries(series1)
+                                }
+                                2 -> {
+                                    graphView.removeAllSeries()
+                                    graphView.addSeries(series2)
+                                }
+                                3 -> {
+                                    graphView.removeAllSeries()
+                                    graphView.addSeries(series3)
+                                }
+                            }
                             buttonPressedMeasure()
                             while(!myBluetoothService.isDoneReading()){
                                 delay(1)
@@ -208,6 +289,7 @@ class HomeFragment : Fragment() {
 
                             if(i<3){
                                 delay(1)
+                                index = 0
                                 binding.textHome.text =getString(R.string.next_attempt, maxGrip)
                                 binding.connectButton.visibility = View.INVISIBLE
                                 binding.connectButton.visibility = View.INVISIBLE
@@ -273,6 +355,9 @@ class HomeFragment : Fragment() {
             binding.connectButton.text = getString(R.string.connect)
             stateOfBluetooth = readyToConnect
         }
+        else{
+            binding.textHome.text = getString(R.string.device_not_found)
+        }
     }
 
     private fun buttonPressedMeasure(){
@@ -314,6 +399,8 @@ class HomeFragment : Fragment() {
             connectToDevice.disconnect()
             stateOfBluetooth = findBluetoothModule
             maxGrip = 0.0
+            measurementIndex = 0
+            total = 0.0
         }
     }
 
@@ -386,7 +473,8 @@ class HomeFragment : Fragment() {
             deviceFound = false
             val pairedDevices: Set<BluetoothDevice>? = bluetoothAdapter?.bondedDevices
             pairedDevices?.forEach { device ->
-                if(device.name == "HC-05"){
+                if(device.name == myDeviceName){
+               //if(device.name == "HC-05")
                     deviceFound = true
                     deviceAddress = device.address
                     binding.textHome.text = getString(R.string.device_found, device.name, device.address, getTime(), getDate())

@@ -27,6 +27,7 @@ class MyBluetoothService(
     private val durationMillis = 10000
     private var startTimeMillis = System.currentTimeMillis()
     private var continueReading = true
+    private var readIndex = 0
     private inner class ConnectedThread : Thread() {
 
         override fun run() {
@@ -56,6 +57,12 @@ class MyBluetoothService(
                 // Read from the InputStream.
                 val temp = System.currentTimeMillis()
                 numBytes = try {
+                    //clear data before reading
+                    if(readIndex<=0){
+                        val availableBytes = mmInStream.available()
+                        val buffer = ByteArray(availableBytes)
+                        mmInStream.read(buffer)
+                    }
                     //Log.d(TAG, "numBytes")
                     mmInStream.read(mmBuffer)
                 } catch (e: IOException) {
@@ -63,12 +70,16 @@ class MyBluetoothService(
                     break
                 }
                 Log.d(TAG, "first period: ${System.currentTimeMillis()-temp}")
+
+                //send message to the handler, ignore the first read
                 val readMsg = handler.obtainMessage(
                     MESSAGE_READ, numBytes, -1,
                     mmBuffer
                 )
                 readMsg.sendToTarget()
 
+                //
+                readIndex++
                 // Ensure that numBytes and mmBuffer are correct before sending the message
                 Log.d(TAG, "numBytes: $numBytes")
                 val period = System.currentTimeMillis() - previous
@@ -122,6 +133,7 @@ class MyBluetoothService(
         val connectedThread = ConnectedThread()
         continueReading = true
         isDone = false
+        readIndex = 0
         connectedThread.start()
     }
 

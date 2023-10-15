@@ -35,6 +35,7 @@
         Your average maximum grip strength is: %.1fkg</string>
     <string name="invalid_double">Received data is not a valid double</string>
     <string name="measure_again_text">Preparing to measure again…</string>
+    <string name="device_not_found">Device %1$s not found, please ensure that it is paired to your phone and bluetooth is on</string>
     <string name="next_attempt">Your maximum grip strength for this attempt is %.1fkg, prepare to measure again</string>
     <string name="history">History</string>
 
