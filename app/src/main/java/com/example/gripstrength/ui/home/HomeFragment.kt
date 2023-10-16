@@ -223,15 +223,15 @@ class HomeFragment : Fragment() {
         //y axis viewport settings
         graphView.viewport.isYAxisBoundsManual = true
         graphView.viewport.setMinY(0.0)
-        graphView.viewport.setMaxY(100.0)
+        graphView.viewport.setMaxY(70.0)
         series1.color = Color.WHITE
-        series2.color = Color.WHITE
-        series3.color = Color.WHITE
+        series2.color = Color.GREEN
+        series3.color = Color.MAGENTA
         graphView.gridLabelRenderer.gridColor = Color.WHITE
         graphView.gridLabelRenderer.horizontalAxisTitleColor = Color.WHITE
         graphView.gridLabelRenderer.verticalAxisTitleColor = Color.WHITE
         graphView.gridLabelRenderer.numHorizontalLabels = 8
-        //graphView.gridLabelRenderer.numVerticalLabels = 11
+        graphView.gridLabelRenderer.numVerticalLabels = 8
 
 
         graphView.addSeries(series1)

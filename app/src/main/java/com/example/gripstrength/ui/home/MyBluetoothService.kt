@@ -53,7 +53,8 @@ class MyBluetoothService(
             //val durationMillis = 10000 // Set the desired duration in milliseconds (e.g., 5000 ms or 5 seconds)
             //while (System.currentTimeMillis() - startTimeMillis < durationMillis) {
             var previous = System.currentTimeMillis()
-            while ((continueReading) && (System.currentTimeMillis() - startTimeMillis < durationMillis)) {
+            //while ((continueReading) && (System.currentTimeMillis() - startTimeMillis < durationMillis)) {
+            while ((continueReading) && readIndex<60) {
                 // Read from the InputStream.
                 val temp = System.currentTimeMillis()
                 numBytes = try {
@@ -72,6 +73,7 @@ class MyBluetoothService(
                 Log.d(TAG, "first period: ${System.currentTimeMillis()-temp}")
 
                 //send message to the handler, ignore the first read
+                if(readIndex==59){isDone = true}
                 val readMsg = handler.obtainMessage(
                     MESSAGE_READ, numBytes, -1,
                     mmBuffer
@@ -87,7 +89,8 @@ class MyBluetoothService(
                 Log.d(TAG, "period: $period")
                 Log.d(TAG, "mmBuffer: ${String(mmBuffer, 0, numBytes)}")
             }
-            if(System.currentTimeMillis() - startTimeMillis > durationMillis){isDone = true}
+            if(readIndex>=60){isDone = true}
+            //if(System.currentTimeMillis() - startTimeMillis > durationMillis){isDone = true}
         }
     }
 
