@@ -213,7 +213,7 @@ class HomeFragment : Fragment() {
 
         // Set properties for the series (if needed)
         series1.title = "Data Series"
-        graphView.title = "Grip strength"
+        graphView.title = "GRIP STRENGTH DEVELOPMENT TRACK GRAPH"
         graphView.viewport.isScrollable = true
 
         //x axis viewport settings
@@ -227,9 +227,13 @@ class HomeFragment : Fragment() {
         series1.color = Color.WHITE
         series2.color = Color.GREEN
         series3.color = Color.MAGENTA
+        graphView.titleColor = Color.WHITE
+        graphView.gridLabelRenderer.verticalAxisTitle = "Grip strength (kg)"
+        graphView.gridLabelRenderer.verticalLabelsColor = Color.WHITE
         graphView.gridLabelRenderer.gridColor = Color.WHITE
         graphView.gridLabelRenderer.horizontalAxisTitleColor = Color.WHITE
         graphView.gridLabelRenderer.verticalAxisTitleColor = Color.WHITE
+        graphView.gridLabelRenderer.isHorizontalLabelsVisible = false
         graphView.gridLabelRenderer.numHorizontalLabels = 8
         graphView.gridLabelRenderer.numVerticalLabels = 8
 
