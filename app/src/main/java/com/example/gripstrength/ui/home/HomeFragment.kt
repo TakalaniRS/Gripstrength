@@ -93,7 +93,7 @@ class HomeFragment : Fragment() {
     private lateinit var sharedPreferencesHelper: SharedPreferencesHelper
 
     //Date and time
-    val myCalendar = Calendar.getInstance()
+    //val myCalendar = Calendar.getInstance()
 
     //initialize handler
     val handler = Handler(Looper.getMainLooper()) { msg ->
@@ -489,6 +489,7 @@ class HomeFragment : Fragment() {
     }
 
     private fun getDate(): String{
+        var myCalendar = Calendar.getInstance()
         val myYear = myCalendar.get(Calendar.YEAR)
         val myMonth = myCalendar.get(Calendar.MONTH)
         val myDay = myCalendar.get(Calendar.DAY_OF_MONTH)
@@ -496,10 +497,13 @@ class HomeFragment : Fragment() {
     }
 
     private fun getTime(): String{
+        var myCalendar = Calendar.getInstance()
         val myHour = myCalendar.get(Calendar.HOUR_OF_DAY)
         val myMinute = myCalendar.get(Calendar.MINUTE)
         val mySecond = myCalendar.get(Calendar.SECOND)
-        return "$myHour:$myMinute"
+        var output:String = String.format("%02d:%02d", myHour, myMinute)
+        //return "$myHour:$myMinute"
+        return output
     }
 
     private fun pairedDeviceList() {
@@ -534,7 +538,7 @@ class HomeFragment : Fragment() {
                 if(device.name == myDeviceName){
                     deviceFound = true
                     deviceAddress = device.address
-                    binding.textHome.text = getString(string.device_found, device.name, device.address, getTime(), getDate())
+                    binding.textHome.text = getString(string.device_found, device.name, device.address)
                 }
             }
         }

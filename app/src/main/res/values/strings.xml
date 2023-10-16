@@ -22,7 +22,7 @@
     <string name="data_toast">Data toast</string>
     <string name="data_write">Data write</string>
     <string name="no_message">No message to display</string>
-    <string name="device_found">Device %1$s with address %2$s has been found at %3$s, on %4$s</string>
+    <string name="device_found">Device %1$s with address %2$s has been found.</string>
     <string name="connecting">Connecting, wait a moment…</string>
     <string name="connection_failed">Connection failed, please ensure that the physical device is on and try again.</string>
     <string name="connection_successful">Bluetooth successfully connected. \n
