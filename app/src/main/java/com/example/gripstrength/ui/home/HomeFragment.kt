@@ -11,7 +11,6 @@ import android.content.Context
 import android.content.Intent
 import android.content.pm.PackageManager
 import android.graphics.Color
-import android.os.Build.VERSION_CODES.R
 import android.os.Bundle
 import android.os.Handler
 import android.os.Looper
@@ -27,7 +26,7 @@ import androidx.core.content.ContextCompat
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.ViewModelProvider
 import androidx.navigation.fragment.findNavController
-import com.example.gripstrength.R
+import com.example.gripstrength.R.string
 import com.example.gripstrength.databinding.FragmentHomeBinding
 import com.google.gson.Gson
 import com.google.gson.reflect.TypeToken
@@ -41,10 +40,10 @@ import kotlinx.coroutines.launch
 import java.io.IOException
 import java.io.InputStream
 import java.io.OutputStream
-import java.math.RoundingMode
-import java.text.DecimalFormat
 import java.util.Calendar
 import java.util.UUID
+import kotlin.math.pow
+import kotlin.math.roundToInt
 
 class HomeFragment : Fragment() {
 
@@ -63,7 +62,7 @@ class HomeFragment : Fragment() {
     private var isBluetoothOn = true
     private var connectToDevice = ConnectToDevice()
     private lateinit var myBluetoothService: MyBluetoothService
-    private var myDeviceName = "LAPTOP-NM58S2CS"
+    private var myDeviceName = "HC-05"
 
     //Defining states of the app
     private val findBluetoothModule = "find"
@@ -113,7 +112,7 @@ class HomeFragment : Fragment() {
                         // Convert the string to a double
                         val receivedDouble = valueStr.toDouble()
                         // Handle the received double as needed
-                        binding.textHome.text = getString(R.string.received_double, receivedDouble)
+                        binding.textHome.text = getString(string.received_double, receivedDouble)
 
                         if(receivedDouble > maxGrip)
                         {
@@ -142,26 +141,27 @@ class HomeFragment : Fragment() {
                         if(myBluetoothService.isDoneReading()){
                             total+=maxGrip
                             if(measurementIndex == 3){
-                                var aveValue = total/3
-                                val df = DecimalFormat("#.#")
-                                df.roundingMode = RoundingMode.CEILING
-                                var realValue = df.format(aveValue)
-                                maxGrip = realValue.toDouble()
+                                val aveValue = total/3
+                                //val df = DecimalFormat("#.#")
+                                //df.roundingMode = RoundingMode.CEILING
+                                //val realValue = df.format(aveValue)
+                                maxGrip = aveValue.roundTo(1)
+                                Log.d(TAG, "Grip: $maxGrip")
                                 measurementIndex = 0
                                 graphView.addSeries(series1)
                                 graphView.addSeries(series2)
                                 graphView.onDataChanged(false,false)
                                 //graphView.visibility = View.VISIBLE
                             }
-                            binding.textHome.text = getString(R.string.maximum_grip, maxGrip)
+                            binding.textHome.text = getString(string.maximum_grip, maxGrip)
                             binding.connectButton.visibility = View.VISIBLE
                             binding.storeButton.visibility = View.VISIBLE
                         }
 
                     } catch (e: NumberFormatException) {
                         // Handle the case where the string cannot be parsed as a double
-                        Log.d(TAG, "data receive not a valid double")
-                        binding.textHome.text = getString(R.string.invalid_double)
+                        Log.d(TAG, "data receive: $valueStr")
+                        binding.textHome.text = getString(string.invalid_double)
                     }
 
                     // Update the TextView with the received message
@@ -169,15 +169,15 @@ class HomeFragment : Fragment() {
                 }
             }
             MESSAGE_TOAST ->{
-                binding.textHome.text = getString(R.string.data_toast)
+                binding.textHome.text = getString(string.data_toast)
             }
             MESSAGE_WRITE -> {
-                binding.textHome.text = getString(R.string.data_write)
+                binding.textHome.text = getString(string.data_write)
             }
 
             else -> {
                 // Display a message when there's no specific message to handle
-                binding.textHome.text = getString(R.string.no_message)
+                binding.textHome.text = getString(string.no_message)
             }
         }
         true
@@ -219,7 +219,7 @@ class HomeFragment : Fragment() {
         //x axis viewport settings
         graphView.viewport.isXAxisBoundsManual = true
         graphView.viewport.setMinX(0.0)
-        graphView.viewport.setMaxX(100.0) // Assuming 30 data points
+        graphView.viewport.setMaxX(70.0) // Assuming 30 data points
         //y axis viewport settings
         graphView.viewport.isYAxisBoundsManual = true
         graphView.viewport.setMinY(0.0)
@@ -230,6 +230,8 @@ class HomeFragment : Fragment() {
         graphView.gridLabelRenderer.gridColor = Color.WHITE
         graphView.gridLabelRenderer.horizontalAxisTitleColor = Color.WHITE
         graphView.gridLabelRenderer.verticalAxisTitleColor = Color.WHITE
+        graphView.gridLabelRenderer.numHorizontalLabels = 8
+        //graphView.gridLabelRenderer.numVerticalLabels = 11
 
 
         graphView.addSeries(series1)
@@ -241,7 +243,7 @@ class HomeFragment : Fragment() {
             // Device doesn't support Bluetooth
             val textView: TextView = binding.textHome
             homeViewModel.text.observe(viewLifecycleOwner) {
-                textView.text = getString(R.string.bluetooth_not_supported)
+                textView.text = getString(string.bluetooth_not_supported)
             }
         }
 
@@ -262,7 +264,7 @@ class HomeFragment : Fragment() {
             when(stateOfBluetooth){
                 findBluetoothModule -> buttonPressedFind()
                 readyToConnect -> {
-                    binding.textHome.text = getString(R.string.connecting)
+                    binding.textHome.text = getString(string.connecting)
                     CoroutineScope(Dispatchers.Main).launch {
                         buttonPressedConnect()
                     }
@@ -296,9 +298,9 @@ class HomeFragment : Fragment() {
                             if(i<3){
                                 delay(1)
                                 index = 0
-                                binding.textHome.text =getString(R.string.next_attempt, maxGrip)
+                                binding.textHome.text =getString(string.next_attempt, maxGrip)
                                 binding.connectButton.visibility = View.INVISIBLE
-                                binding.connectButton.visibility = View.INVISIBLE
+                                binding.storeButton.visibility = View.INVISIBLE
                                 delay(30000)
                                 maxGrip = 0.0
                             }
@@ -306,12 +308,30 @@ class HomeFragment : Fragment() {
                     }
                 }
                 measuring -> {
+                    series1.resetData(arrayOf())
+                    series2.resetData(arrayOf())
+                    series3.resetData(arrayOf())
                     maxGrip = 0.0
+                    index = 0
                     myBluetoothService.stopReadingData()
                     total = 0.0
                     CoroutineScope(Dispatchers.Main).launch {
                         for (i in 1..3) {
                             measurementIndex++
+                            when(i){
+                                1 -> {
+                                    graphView.removeAllSeries()
+                                    graphView.addSeries(series1)
+                                }
+                                2 -> {
+                                    graphView.removeAllSeries()
+                                    graphView.addSeries(series2)
+                                }
+                                3 -> {
+                                    graphView.removeAllSeries()
+                                    graphView.addSeries(series3)
+                                }
+                            }
                             buttonPressedMeasure()
                             while(!myBluetoothService.isDoneReading()){
                                 delay(1)
@@ -319,9 +339,10 @@ class HomeFragment : Fragment() {
 
                             if(i<3){
                                 delay(1)
-                                binding.textHome.text =getString(R.string.next_attempt, maxGrip)
+                                index = 0
+                                binding.textHome.text =getString(string.next_attempt, maxGrip)
                                 binding.connectButton.visibility = View.INVISIBLE
-                                binding.connectButton.visibility = View.INVISIBLE
+                                binding.storeButton.visibility = View.INVISIBLE
                                 delay(30000)
                                 maxGrip = 0.0
                             }
@@ -359,34 +380,34 @@ class HomeFragment : Fragment() {
         val startTime = System.currentTimeMillis()
         val duration = 5000
         while(!(connectSuccessful) && (System.currentTimeMillis() - startTime < duration)){
-            //binding.textHome.text = getString(R.string.connecting)
+            //binding.textHome.text = getString(string.connecting)
         }
 
         if(connectSuccessful){
-            binding.textHome.text = getString(R.string.connection_successful)
-            binding.connectButton.text = getString(R.string.start_measuring)
+            binding.textHome.text = getString(string.connection_successful)
+            binding.connectButton.text = getString(string.start_measuring)
             stateOfBluetooth = readyToMeasure
         }
         else{
-            binding.textHome.text = getString(R.string.connection_failed)
+            binding.textHome.text = getString(string.connection_failed)
             connectToDevice.disconnect()
         }
     }
 
     private fun buttonPressedFind(){
         if(deviceFound && isBluetoothOn){
-            binding.connectButton.text = getString(R.string.connect)
+            binding.connectButton.text = getString(string.connect)
             stateOfBluetooth = readyToConnect
         }
         else{
-            binding.textHome.text = getString(R.string.device_not_found)
+            binding.textHome.text = getString(string.device_not_found)
         }
     }
 
     private fun buttonPressedMeasure(){
         if(connectSuccessful){
             binding.textHome.text = ""
-            binding.connectButton.text = getString(R.string.measure_again)
+            binding.connectButton.text = getString(string.measure_again)
             stateOfBluetooth = measuring
             binding.connectButton.visibility = View.INVISIBLE
             binding.storeButton.visibility = View.INVISIBLE
@@ -397,9 +418,9 @@ class HomeFragment : Fragment() {
         }
 
         else{
-            binding.textHome.text = getString(R.string.connection_failed)
+            binding.textHome.text = getString(string.connection_failed)
             stateOfBluetooth = readyToConnect
-            binding.connectButton.text = getString(R.string.connect)
+            binding.connectButton.text = getString(string.connect)
             binding.storeButton.visibility = View.INVISIBLE
         }
     }
@@ -408,11 +429,16 @@ class HomeFragment : Fragment() {
         super.onResume()
 
         when(stateOfBluetooth){
-            findBluetoothModule -> binding.connectButton.text = getString(R.string.find_device)
-            readyToConnect -> binding.connectButton.text = getString(R.string.connect)
-            readyToMeasure -> binding.connectButton.text = getString(R.string.menu_measure)
-            else -> binding.connectButton.text = getString(R.string.find_device)
+            findBluetoothModule -> binding.connectButton.text = getString(string.find_device)
+            readyToConnect -> binding.connectButton.text = getString(string.connect)
+            readyToMeasure -> binding.connectButton.text = getString(string.menu_measure)
+            else -> binding.connectButton.text = getString(string.find_device)
         }
+    }
+
+    fun Double.roundTo(decimalPlaces: Int): Double {
+        val factor = 10.0.pow(decimalPlaces)
+        return (this * factor).roundToInt() / factor
     }
 
     override fun onPause() {
@@ -423,7 +449,11 @@ class HomeFragment : Fragment() {
             stateOfBluetooth = findBluetoothModule
             maxGrip = 0.0
             measurementIndex = 0
+            series1.resetData(arrayOf())
+            series2.resetData(arrayOf())
+            series3.resetData(arrayOf())
             total = 0.0
+            index = 0
         }
     }
 
@@ -496,11 +526,11 @@ class HomeFragment : Fragment() {
             deviceFound = false
             val pairedDevices: Set<BluetoothDevice>? = bluetoothAdapter?.bondedDevices
             pairedDevices?.forEach { device ->
+                //if(device.name == "HC-05"){
                 if(device.name == myDeviceName){
-               //if(device.name == "HC-05")
                     deviceFound = true
                     deviceAddress = device.address
-                    binding.textHome.text = getString(R.string.device_found, device.name, device.address, getTime(), getDate())
+                    binding.textHome.text = getString(string.device_found, device.name, device.address, getTime(), getDate())
                 }
             }
         }
@@ -514,10 +544,10 @@ class HomeFragment : Fragment() {
         if (requestCode == REQUEST_BLUETOOTH_PERMISSION) {
             if (grantResults.isNotEmpty() && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
                 // Permission granted, you can proceed with Bluetooth functionality here
-                binding.textHome.text = getString(R.string.bluetooth_permission_granted)
+                binding.textHome.text = getString(string.bluetooth_permission_granted)
             } else {
                 // Permission denied, handle accordingly
-                binding.textHome.text = getString(R.string.bluetooth_permission_denied)
+                binding.textHome.text = getString(string.bluetooth_permission_denied)
             }
         }
     }
@@ -541,7 +571,7 @@ class HomeFragment : Fragment() {
                             Manifest.permission.BLUETOOTH_ADMIN
                         ) != PackageManager.PERMISSION_GRANTED
                     ) {
-                        binding.textHome.text = getString(R.string.bluetooth_permission_denied)
+                        binding.textHome.text = getString(string.bluetooth_permission_denied)
                     }
 
                     else{
@@ -601,7 +631,7 @@ class HomeFragment : Fragment() {
     //setup array function - for when the app starts up for the first time use dummy measurements
     fun setupArray(dataArray: ArrayList<String>){
         if(dataArray.size!=10){
-            val dummy = "Max grip strength:  0kg \n\nDate:  00-00-00 \n\nTime:  00:00"
+            val dummy = "Max grip strength:  0kg \n\nDate:  00-00-00 \n\nTime:  00:00:00"
             val dummyList: List<String> = listOf(dummy,dummy,dummy,dummy,dummy,dummy,dummy,dummy,dummy,dummy)
             dataArray.clear()
             dataArray.addAll(dummyList)
